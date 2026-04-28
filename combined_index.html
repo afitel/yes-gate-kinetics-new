@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YES-GATE kinetics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+        }
+        
+        body {
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #57C785;
+            flex-shrink: 0;
+        }
+        
+        .sidebar h2 {
+            color: #333;
+            font-size: 1.4em;
+        }
+        
+        .sidebar p {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .file-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .file-list {
+            list-style: none;
+        }
+        
+        .file-item {
+            margin-bottom: 10px;
+        }
+        
+        .file-link {
+            display: block;
+            padding: 14px 18px;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        
+        .file-link:hover {
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+            color: white;
+            transform: translateX(5px);
+            border-color: #57C785;
+            box-shadow: 0 5px 15px rgba(87, 199, 133, 0.3);
+        }
+        
+        .file-link.active {
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+            color: white;
+            border-color: #57C785;
+            box-shadow: 0 5px 15px rgba(87, 199, 133, 0.4);
+        }
+        
+        .preview-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        .preview-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+            background-color: white;
+        }
+        
+        .preview-header h3 {
+            color: #333;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .preview-header .file-icon {
+            font-size: 1.2em;
+        }
+        
+        .preview-content {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        #contentFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        
+        .no-file-selected {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .no-file-selected .icon {
+            font-size: 5em;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0.8;
+        }
+        
+        .no-file-selected h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        
+        .no-file-selected p {
+            font-size: 1.1em;
+            max-width: 500px;
+            line-height: 1.6;
+            color: #6c757d;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 18px;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+            background-color: #f8f9fa;
+            flex-shrink: 0;
+            font-size: 0.95em;
+        }
+        
+        .file-count {
+            font-weight: bold;
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Scrollbar styling */
+        .file-list-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .file-list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .file-list-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%);
+            border-radius: 4px;
+        }
+        
+        .file-list-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4ab073 0%, #e0c94a 100%);
+        }
+        
+        @media (max-width: 992px) {
+            .container {
+                height: auto;
+                min-height: calc(100vh - 40px);
+            }
+            
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+                max-height: 300px;
+            }
+            
+            .file-list-container {
+                max-height: 200px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .sidebar, .preview-header {
+                padding: 20px;
+            }
+        }
+        
+        /* File type indicators */
+        .file-link[data-filetype="html"]::before {
+            content: "📄 ";
+        }
+        
+        .file-link[data-filetype="htm"]::before {
+            content: "📄 ";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📁 YES-GATE kinetics</h1>
+            <p>Select a file from the list to view its content</p>
+        </div>
+        
+        <div class="content-wrapper">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Available Files</h2>
+                    <p>Click on any file to preview it</p>
+                </div>
+                
+                <div class="file-list-container">
+                    <ul class="file-list" id="fileList">
+                        <!-- File list will be generated here -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="preview-area">
+                <div class="preview-header">
+                    <h3>
+                        <span class="file-icon">📄</span>
+                        <span id="currentFile">Select a file to preview</span>
+                    </h3>
+                </div>
+                
+                <div class="preview-content" id="previewContainer">
+                    <div class="no-file-selected" id="noFileSelected">
+                        <div class="icon">📁</div>
+                        <h3>No File Selected</h3>
+                        <p>Choose a file from the list on the left to view its content. The file will be displayed in full height for optimal viewing.</p>
+                    </div>
+                    
+                    <div class="iframe-container" id="iframeContainer" style="display: none;">
+                        <iframe id="contentFrame" src="" title="HTML File Preview" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated with Python • Total files: <span class="file-count" id="fileCount">0</span></p>
+        </div>
+    </div>
+    
+    <script>
+        // Array of files from Python
+        const htmlFiles = ['plots/102__16-04-26.html', 'plots/101__16-04-26.html', 'plots/105__20-04-26.html', 'plots/104__17-04-26.html', 'plots/103__17-04-26.html', 'plots/107__20-04-26.html', 'plots/108__20-04-26.html'];
+        
+        // Get DOM elements
+        const fileListElement = document.getElementById('fileList');
+        const currentFileElement = document.getElementById('currentFile');
+        const noFileSelectedElement = document.getElementById('noFileSelected');
+        const iframeContainerElement = document.getElementById('iframeContainer');
+        const contentFrameElement = document.getElementById('contentFrame');
+        const fileCountElement = document.getElementById('fileCount');
+        
+        // Function to load file into iframe
+        function loadFile(filename, filepath) {
+            // Update the title
+            currentFileElement.textContent = `Viewing: ${filename}`;
+            
+            // Show iframe and hide message
+            noFileSelectedElement.style.display = 'none';
+            iframeContainerElement.style.display = 'block';
+            
+            // Load file into iframe
+            contentFrameElement.src = filepath;
+            
+            // Update active link
+            document.querySelectorAll('.file-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.filename === filename) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Store current file in localStorage for persistence
+            localStorage.setItem('lastViewedFile', JSON.stringify({ filename, filepath }));
+        }
+        
+        // Function to extract file extension
+        function getFileExtension(filename) {
+            return filename.split('.').pop().toLowerCase();
+        }
+        
+        // Function to create file list
+        function createFileList() {
+            // Clear the list
+            fileListElement.innerHTML = '';
+            
+            // Sort files by name
+            const sortedFiles = [...htmlFiles].sort();
+            
+            // Create list items
+            sortedFiles.forEach(filepath => {
+                const filename = filepath.split('/').pop().split('\\').pop();
+                const fileExtension = getFileExtension(filename);
+                
+                const listItem = document.createElement('li');
+                listItem.className = 'file-item';
+                
+                const link = document.createElement('a');
+                link.href = '#';
+                link.className = 'file-link';
+                link.textContent = filename;
+                link.dataset.filename = filename;
+                link.dataset.filetype = fileExtension;
+                
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    loadFile(filename, filepath);
+                });
+                
+                listItem.appendChild(link);
+                fileListElement.appendChild(listItem);
+            });
+            
+            // Update file counter
+            fileCountElement.textContent = sortedFiles.length;
+            
+            // Try to load last viewed file from localStorage
+            const lastViewed = localStorage.getItem('lastViewedFile');
+            let fileToLoad = null;
+            
+            if (lastViewed) {
+                try {
+                    const { filename, filepath } = JSON.parse(lastViewed);
+                    // Check if the file still exists in our list
+                    if (sortedFiles.includes(filepath)) {
+                        fileToLoad = { filename, filepath };
+                    }
+                } catch (e) {
+                    console.log('Could not load last viewed file:', e);
+                }
+            }
+            
+            // Load first file if no last viewed file found
+            if (!fileToLoad && sortedFiles.length > 0) {
+                const firstFile = sortedFiles[0];
+                const firstName = firstFile.split('/').pop().split('\\').pop();
+                fileToLoad = { filename: firstName, filepath: firstFile };
+            }
+            
+            // Load the file
+            if (fileToLoad) {
+                loadFile(fileToLoad.filename, fileToLoad.filepath);
+            }
+        }
+        
+        // Handle iframe load events
+        contentFrameElement.addEventListener('load', function() {
+            // Try to adjust iframe content height if possible
+            try {
+                const iframeDoc = this.contentDocument || this.contentWindow.document;
+                const height = Math.max(
+                    iframeDoc.body.scrollHeight,
+                    iframeDoc.documentElement.scrollHeight,
+                    iframeDoc.body.offsetHeight,
+                    iframeDoc.documentElement.offsetHeight,
+                    iframeDoc.body.clientHeight,
+                    iframeDoc.documentElement.clientHeight
+                );
+                
+                // We can't directly set iframe height due to cross-origin restrictions
+                // But we can post messages if files are from same origin
+            } catch (e) {
+                // Cross-origin restriction, can't access iframe document
+            }
+        });
+        
+        // Initialize list when page loads
+        document.addEventListener('DOMContentLoaded', createFileList);
+        
+        // Handle messages from iframe (if needed)
+        window.addEventListener('message', (event) => {
+            // Can add handling for messages from loaded pages
+            console.log('Message from iframe:', event.data);
+        }, false);
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            // Iframe will automatically adjust with CSS
+        });
+    </script>
+</body>
+</html>
